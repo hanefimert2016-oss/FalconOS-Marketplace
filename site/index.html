@@ -57,11 +57,15 @@ $("tab-market").onclick=()=>show("market");$("tab-code").onclick=()=>show("code"
 function validate(){
  const id=$("app-id").value.trim(),name=$("app-name").value.trim(),version=$("app-version").value.trim(),summary=$("app-summary").value.trim();
  if(!/^[a-z][a-z0-9-]{1,31}$/.test(id))throw Error("ID: 2–32 lowercase letters, digits, hyphens");
- if(!/^\d+\.\d+\.\d+(?:-[a-z0-9.-]+)?$/.test(version))throw Error("Version must be semver (e.g. 1.0.0)");
+ if(!/^\d+\.\d+\.\d+(?:-[a-z0-9.-]+)?$/.test(version)||version.length>24)throw Error("Version must be SemVer (max 24 chars)");
+ const core=version.split("-")[0].split(".");
+ if(core.some(n=>(n.length>1&&n.startsWith("0"))||BigInt(n)>4294967295n))throw Error("SemVer core contains invalid numbers");
+ const pre=version.slice(core.join(".").length+1);
+ if(version.includes("-")&&pre.split(".").some(n=>!n||(/^\d+$/.test(n)&&n.length>1&&n.startsWith("0"))))throw Error("Invalid prerelease version");
  for(const [title,value,max] of [["Name",name,40],["Summary",summary,75]])if(value.length<2||value.length>max||!/^[A-Za-z0-9 .,:!?+/_()\-]+$/.test(value))throw Error(title+" must be basic ASCII (2–"+max+" chars)");
  const source=$("source").value.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
  if(!source.endsWith("\n"))throw Error("Script must end with newline");
- if(!/^[\x00-\x7F]*$/.test(source))throw Error("v1 scripts support ASCII only");
+ if(/[^\x20-\x7E\n]/.test(source))throw Error("Use printable ASCII and LF only");
  source.split("\n").forEach((line,index)=>{if(!line||line.startsWith("#"))return;let cmd=line.trim().split(/\s+/)[0];if(!allow.has(cmd))throw Error("Line "+(index+1)+": unsupported command "+cmd);
  if(line.length>180||/(;|&&|\|\||\||>|<|\x60|\$|\\|&)/.test(line))throw Error("Line "+(index+1)+": prohibited shell operator")});
  const manifest={id,name,version,summary};

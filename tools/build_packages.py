@@ -20,20 +20,34 @@ def build_app(directory):
         raise ValueError("manifest values must be strings")
     if not ID_RE.fullmatch(data["id"]) or directory.name != data["id"]:
         raise ValueError("invalid id or mismatched directory")
-    if not VER_RE.fullmatch(data["version"]):
-        raise ValueError("invalid version")
+    version = data["version"]
+    if not VER_RE.fullmatch(version) or len(version) > 24:
+        raise ValueError("invalid or oversized version")
+    core, _, pre = version.partition("-")
+    for token in core.split("."):
+        if (len(token) > 1 and token[0] == "0") or int(token) > 0xFFFFFFFF:
+            raise ValueError("invalid SemVer core")
+    if pre:
+        for identifier in pre.split("."):
+            if not identifier or (identifier.isdigit() and
+                                  len(identifier) > 1 and identifier[0] == "0"):
+                raise ValueError("invalid SemVer prerelease")
     for field, limit in (("name", 40), ("summary", 75)):
         value = data[field]
         if not 2 <= len(value) <= limit or not re.fullmatch(r"[A-Za-z0-9 .,:!?+/_()\-]+", value):
             raise ValueError("invalid " + field)
     script = (directory / "main.fsh").read_text(encoding="utf-8")
-    if not script.endswith("\n") or not script.isascii() or "\r" in script or "\x00" in script:
-        raise ValueError("script must be ASCII and end in newline")
+    if not script.endswith("\n") or any(
+        c != "\n" and not (" " <= c <= "~") for c in script
+    ):
+        raise ValueError("script must use printable ASCII and LF line endings")
     for number, line in enumerate(script.splitlines(), 1):
+        if len(line) > 180:
+            raise ValueError(f"line {number}: too long")
         if not line or line.startswith("#"):
             continue
         command = line.split(maxsplit=1)[0]
-        if command not in ALLOWED or len(line) > 180:
+        if command not in ALLOWED:
             raise ValueError(f"line {number}: command not allowed")
         if any(x in line for x in (";", "&&", "||", "|", ">", "<", "$", "\u0060", "\\", "&")):
             raise ValueError(f"line {number}: shell operators forbidden")
