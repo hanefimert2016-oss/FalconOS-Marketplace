@@ -1,0 +1,14 @@
+FAPP/1
+id=system-info
+name=System Info
+version=1.0.0
+summary=Inspect the FalconOS environment
+
+# System Info
+clear
+echo FalconOS System Status
+uname
+uptime
+whoami
+free
+df
