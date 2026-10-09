@@ -21,7 +21,7 @@ class PackageTests(unittest.TestCase):
             d = pathlib.Path(temp) / "malicious"
             d.mkdir()
             (d / "manifest.json").write_text('{"id":"malicious","name":"Malicious Test","version":"1.0.0","summary":"Security test app"}')
-            for cmd in ("reboot\n", "echo test; shutdown\n", "echo foo > bar\n", "echo foo | sh\n"):
+            for cmd in ("reboot\n", "echo test; shutdown\n", "echo foo > bar\n", "echo foo | sh\n", "echo hello & reboot\n"):
                 (d / "main.fsh").write_text(cmd)
                 with self.assertRaises(ValueError):
                     packager.build_app(d)

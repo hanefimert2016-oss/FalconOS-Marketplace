@@ -35,7 +35,7 @@ def build_app(directory):
         command = line.split(maxsplit=1)[0]
         if command not in ALLOWED or len(line) > 180:
             raise ValueError(f"line {number}: command not allowed")
-        if any(x in line for x in (";", "&&", "||", "|", ">", "<", "$", "\u0060", "\\")):
+        if any(x in line for x in (";", "&&", "||", "|", ">", "<", "$", "\u0060", "\\", "&")):
             raise ValueError(f"line {number}: shell operators forbidden")
     text = "FAPP/1\n" + "".join(f"{k}={data[k]}\n" for k in ("id","name","version","summary")) + "\n" + script
     raw = text.encode("ascii")

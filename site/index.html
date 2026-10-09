@@ -61,7 +61,7 @@ function validate(){
  if(!source.endsWith("\n"))throw Error("Script must end with newline");
  if(!/^[\x00-\x7F]*$/.test(source))throw Error("v1 scripts support ASCII only");
  source.split("\n").forEach((line,index)=>{if(!line||line.startsWith("#"))return;let cmd=line.trim().split(/\s+/)[0];if(!allow.has(cmd))throw Error("Line "+(index+1)+": unsupported command "+cmd);
- if(line.length>180||/(;|&&|\|\||\||>|<|\x60|\$|\\)/.test(line))throw Error("Line "+(index+1)+": prohibited shell operator")});
+ if(line.length>180||/(;|&&|\|\||\||>|<|\x60|\$|\\|&)/.test(line))throw Error("Line "+(index+1)+": prohibited shell operator")});
  const manifest={id,name,version,summary};
  const pkg="FAPP/1\n"+"id="+id+"\nname="+name+"\nversion="+version+"\nsummary="+summary+"\n\n"+source;
  if(new TextEncoder().encode(pkg).length>4096)throw Error("Package exceeds 4 KiB limit");
