@@ -1,0 +1,47 @@
+name: Publish FalconOS App Releases
+on:
+  push:
+    branches: [main]
+    paths: ['apps/**', 'tools/build_packages.py', '.github/workflows/publish.yml']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: marketplace-publisher
+  cancel-in-progress: false
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package and validate
+        run: |
+          python3 tools/build_packages.py --all --output dist
+          python3 -m unittest discover -s tests -v
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FalconOS-app-packages
+          path: dist/*
+      - name: Publish new, immutable Releases
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' > dist/releases.tsv
+          import json
+          for app in json.load(open('dist/catalog.json')):
+              print(app['tag'], app['file'], app['name'], sep='\t')
+          PY
+          while IFS=$'\t' read -r tag file name; do
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo "Release exists: $tag"
+              continue
+            fi
+            gh release create "$tag" "dist/$file" "dist/$file.sha256" \
+              --title "$name" --latest=false \
+              --notes "FAPP/1 release $tag. See reviewed app source in apps/."
+          done < dist/releases.tsv
