@@ -26,3 +26,4 @@ jobs:
           PY
           node --check /tmp/falcon-codedium.js
           node site/test.js
+          python3 tests/test_native_catalog.py
