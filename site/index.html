@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FalconOS Marketplace · CodeDium</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#111a2d;--edge:#283653;--fg:#ebf3ff;--muted:#91a0bc;--accent:#7daaff;--soft:#192942}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px system-ui,Segoe UI,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:15px;border-bottom:1px solid var(--edge);padding:14px 24px}
+.brand{font-weight:800;font-size:20px;letter-spacing:-.6px}.brand span{color:var(--accent)}
+.tabs{display:flex;gap:8px}button,.btn{cursor:pointer;color:var(--fg);background:#1a2943;border:1px solid #324562;border-radius:10px;padding:10px 13px;font-weight:600}
+button:hover,.btn:hover{border-color:var(--accent)}button.primary{background:#2d64d0;border-color:#2d64d0}
+button.selected{background:var(--soft);border-color:var(--accent)}main{max-width:1300px;margin:25px auto;padding:0 20px}
+.page{display:none}.page.active{display:block}h1{font-size:28px;letter-spacing:-.6px;margin:0 0 8px}p{color:var(--muted);line-height:1.5}.label{display:block;color:var(--muted);font-weight:600;font-size:12px;margin-bottom:6px}
+.card{background:var(--panel);border:1px solid var(--edge);border-radius:15px;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-top:24px}
+.card h3{margin:0;font-size:17px}.card p{min-height:45px}.chip{display:inline-block;background:var(--soft);border-radius:7px;font-size:12px;padding:5px 8px;margin-top:6px}
+a{color:var(--accent)}.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;margin-top:20px}
+input,textarea{width:100%;background:#0a1324;border:1px solid #354562;color:var(--fg);border-radius:9px;padding:10px;font:inherit;outline:none}
+input:focus,textarea:focus{border-color:var(--accent)}textarea{resize:vertical;min-height:330px;font:13px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}
+.fields{display:grid;gap:12px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.output{white-space:pre-wrap;background:#070d19;border:1px solid var(--edge);padding:12px;border-radius:10px;color:#b2d3ff;min-height:110px;font:13px/1.6 monospace}
+#status{color:var(--muted);padding:12px 0}footer{text-align:center;padding:26px;color:var(--muted)}
+@media(max-width:760px){header{flex-wrap:wrap}.layout{grid-template-columns:1fr}.grid{grid-template-columns:1fr}h1{font-size:23px}}
+</style></head><body>
+<header><div class="brand">◈ Falcon<span>OS</span> <small style="font-size:11px;color:#93a4c4">MARKETPLACE</small></div>
+<nav class="tabs"><button id="tab-market" class="selected">Marketplace</button><button id="tab-code">CodeDium Studio</button></nav></header>
+<main>
+<section id="market" class="page active"><h1>Explore applications</h1><p>Download verified, versioned .app.pkg assets from GitHub Releases. Source code is public and reviewed before publishing.</p>
+<div class="toolbar"><button onclick="reloadCatalog()">↻ Refresh Releases</button><a class="btn" href="https://github.com/hanefimert2016-oss/FalconOS-Marketplace/releases" target="_blank" rel="noopener">All Releases ↗</a></div>
+<div id="catalog" class="grid"><div class="card">Loading GitHub Releases…</div></div><p id="status"></p></section>
+<section id="code" class="page"><h1>CodeDium Studio</h1><p>Write a safe FalconOS script, test its supported commands and export a real FAPP/1 package. Submit source for review to publish it in the Marketplace.</p>
+<div class="layout">
+<aside class="card fields"><div><span class="label">Application ID</span><input id="app-id" value="my-first-app" maxlength="32" spellcheck="false"></div>
+<div><span class="label">Display name</span><input id="app-name" value="My First App" maxlength="40"></div>
+<div><span class="label">Version</span><input id="app-version" value="1.0.0"></div>
+<div><span class="label">Summary</span><input id="app-summary" value="A tiny FalconOS application" maxlength="75"></div>
+<div class="chip">FAPP/1 · Script runtime · 4 KiB max</div>
+<p style="font-size:12px">Publishing submits a GitHub Pull Request using a fine-grained token (Contents + Pull requests: write). The token stays only in this page's memory and is never persisted.</p></aside>
+<div class="card"><div class="toolbar"><button id="run" class="primary">▶ Test script</button><button id="export">↓ Export .app.pkg</button><button id="publish">↑ Submit publication PR</button></div>
+<textarea id="source" spellcheck="false"># CodeDium example
+clear
+echo Hello from CodeDium
+uname
+date
+</textarea>
+<span class="label" style="margin-top:14px">Test console (browser preview, not FalconOS execution)</span><div id="console" class="output">Ready. Supported commands: echo, date, uname, uptime, whoami, pwd, ls, help, cal, hwinfo, free, df, clear.</div></div></div>
+</section>
+</main><footer>FalconOS Marketplace · Immutable release packages · Source-first publishing</footer>
+<script>
+"use strict";
+const OWNER="hanefimert2016-oss", REPO="FalconOS-Marketplace", ROOT="https://api.github.com/repos/"+OWNER+"/"+REPO;
+const allow=new Set(["echo","date","uname","uptime","whoami","pwd","ls","help","cal","hwinfo","free","df","clear"]);
+function $(id){return document.getElementById(id)}
+function show(id){for(const p of ["market","code"])$(p).classList.toggle("active",p===id);$("tab-market").classList.toggle("selected",id==="market");$("tab-code").classList.toggle("selected",id==="code")}
+$("tab-market").onclick=()=>show("market");$("tab-code").onclick=()=>show("code");
+function validate(){
+ const id=$("app-id").value.trim(),name=$("app-name").value.trim(),version=$("app-version").value.trim(),summary=$("app-summary").value.trim();
+ if(!/^[a-z][a-z0-9-]{1,31}$/.test(id))throw Error("ID: 2–32 lowercase letters, digits, hyphens");
+ if(!/^\d+\.\d+\.\d+(?:-[a-z0-9.-]+)?$/.test(version))throw Error("Version must be semver (e.g. 1.0.0)");
+ for(const [title,value,max] of [["Name",name,40],["Summary",summary,75]])if(value.length<2||value.length>max||!/^[A-Za-z0-9 .,:!?+/_()\-]+$/.test(value))throw Error(title+" must be basic ASCII (2–"+max+" chars)");
+ const source=$("source").value.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+ if(!source.endsWith("\n"))throw Error("Script must end with newline");
+ if(!/^[\x00-\x7F]*$/.test(source))throw Error("v1 scripts support ASCII only");
+ source.split("\n").forEach((line,index)=>{if(!line||line.startsWith("#"))return;let cmd=line.trim().split(/\s+/)[0];if(!allow.has(cmd))throw Error("Line "+(index+1)+": unsupported command "+cmd);
+ if(line.length>180||/(;|&&|\|\||\||>|<|\x60|\$|\\)/.test(line))throw Error("Line "+(index+1)+": prohibited shell operator")});
+ const manifest={id,name,version,summary};
+ const pkg="FAPP/1\n"+"id="+id+"\nname="+name+"\nversion="+version+"\nsummary="+summary+"\n\n"+source;
+ if(new TextEncoder().encode(pkg).length>4096)throw Error("Package exceeds 4 KiB limit");
+ return {manifest,source,pkg};
+}
+$("run").onclick=()=>{try{let x=validate(),out=[];for(let line of x.source.split("\n")){if(!line||line[0]==="#")continue;let sp=line.indexOf(" "),cmd=sp<0?line:line.slice(0,sp),arg=sp<0?"":line.slice(sp+1);
+ if(cmd==="clear"){out=[];continue}if(cmd==="echo")out.push(arg);else if(cmd==="date")out.push(new Date().toLocaleString());else if(cmd==="uname")out.push("FalconOS x86_64 (preview)");else if(cmd==="whoami")out.push("falcon (preview)");else if(cmd==="pwd")out.push("/home/falcon");else out.push("$ "+cmd+" (available on FalconOS guest)");}
+ $("console").textContent=out.join("\n")||"(empty output)";}catch(e){$("console").textContent="ERROR: "+e.message}};
+$("export").onclick=()=>{try{let x=validate(),url=URL.createObjectURL(new Blob([x.pkg],{type:"application/octet-stream"})),a=document.createElement("a");a.href=url;a.download=x.manifest.id+"-v"+x.manifest.version+".app.pkg";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}catch(e){alert(e.message)}};
+function base64(text){const bytes=new TextEncoder().encode(text);let bin="";for(const b of bytes)bin+=String.fromCharCode(b);return btoa(bin)}
+async function gh(path,token,method="GET",body){const res=await fetch(ROOT+path,{method,headers:{"Accept":"application/vnd.github+json","Authorization":"Bearer "+token,"X-GitHub-Api-Version":"2022-11-28",...(body?{"Content-Type":"application/json"}:{})},body:body?JSON.stringify(body):undefined});const payload=await res.json().catch(()=>({}));if(!res.ok)throw Error(payload.message||"GitHub returned HTTP "+res.status);return payload}
+$("publish").onclick=async()=>{let x;try{x=validate()}catch(e){alert(e.message);return}const token=prompt("Enter a fine-grained GitHub token for this repository (Contents + Pull requests write). It is used once and not stored:");if(!token)return;const button=$("publish");button.disabled=true;button.textContent="Submitting…";
+ try{
+ const base=await gh("/git/ref/heads/main",token);const sha=base.object.sha;
+ const branch="codedium/"+x.manifest.id+"-"+Date.now();
+ await gh("/git/refs",token,"POST",{ref:"refs/heads/"+branch,sha});
+ for(const [filename,content] of [["manifest.json",JSON.stringify(x.manifest,null,2)+"\n"],["main.fsh",x.source]]){
+   const path="apps/"+x.manifest.id+"/"+filename;let existing=null;
+   try{existing=await gh("/contents/"+path+"?ref="+encodeURIComponent(branch),token)}catch(e){if(!/Not Found/.test(e.message))throw e}
+   await gh("/contents/"+path,token,"PUT",{message:"feat(app): "+x.manifest.id+" "+filename,content:base64(content),branch,...(existing?{sha:existing.sha}:{})});
+ }
+ const pr=await gh("/pulls",token,"POST",{title:"Publish "+x.manifest.name+" v"+x.manifest.version,head:branch,base:"main",body:"Created in CodeDium Studio. Review command allowlist and verify package before merging."});
+ $("console").textContent="Publication review PR created: "+pr.html_url+"\nOn merge, CI releases the .app.pkg artifact.";window.open(pr.html_url,"_blank","noopener");
+ }catch(e){$("console").textContent="Could not submit PR: "+e.message+"\nCheck token permissions (Contents and Pull Requests: write).";}finally{button.disabled=false;button.textContent="↑ Submit publication PR"}};
+async function reloadCatalog(){
+ $("status").textContent="Reading GitHub Releases…";
+ try{const r=await fetch(ROOT+"/releases?per_page=100",{headers:{"Accept":"application/vnd.github+json"}});if(!r.ok)throw Error("GitHub API HTTP "+r.status);
+ const releases=await r.json(),container=$("catalog");container.replaceChildren();let count=0;
+ for(const release of releases){const asset=release.assets.find(a=>a.name.endsWith(".app.pkg"));if(!asset)continue;count++;
+ const card=document.createElement("div");card.className="card";const name=document.createElement("h3");name.textContent=release.name||release.tag_name;const detail=document.createElement("p");detail.textContent="Verified source release · "+asset.name;
+ const pill=document.createElement("span");pill.className="chip";pill.textContent=Math.ceil(asset.size/1024)+" KiB · "+release.tag_name;
+ const actions=document.createElement("p");const link=document.createElement("a");link.className="btn";link.href=asset.browser_download_url;link.textContent="Download .app.pkg ↗";link.rel="noopener";actions.append(link);card.append(name,detail,pill,actions);container.append(card)}
+ if(!count){const card=document.createElement("div");card.className="card";card.textContent="No published Releases yet. Merge an application PR or trigger Publish workflow.";container.append(card)}
+ $("status").textContent=count+" downloadable release packages";}catch(e){$("status").textContent="Catalog unavailable: "+e.message}}
+window.reloadCatalog=reloadCatalog;reloadCatalog();
+</script></body></html>
