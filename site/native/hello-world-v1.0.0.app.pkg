@@ -1,0 +1,12 @@
+FAPP/1
+id=hello-world
+name=Hello World
+version=1.0.0
+summary=Say hello from the FalconOS terminal
+
+# Hello World
+clear
+echo Welcome to FalconOS Marketplace
+echo Your first downloaded app is running
+uname
+date
