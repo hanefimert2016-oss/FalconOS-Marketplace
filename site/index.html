@@ -25,7 +25,7 @@ input:focus,textarea:focus{border-color:var(--accent)}textarea{resize:vertical;m
 <nav class="tabs"><button id="tab-market" class="selected">Marketplace</button><button id="tab-code">CodeDium Studio</button></nav></header>
 <main>
 <section id="market" class="page active"><h1>Explore applications</h1><p>Download verified, versioned .app.pkg assets from GitHub Releases. Source code is public and reviewed before publishing.</p>
-<div class="toolbar"><button onclick="reloadCatalog()">↻ Refresh Releases</button><a class="btn" href="https://github.com/hanefimert2016-oss/FalconOS-Marketplace/releases" target="_blank" rel="noopener">All Releases ↗</a></div>
+<div class="toolbar"><input id="catalog-filter" style="max-width:340px" placeholder="Search apps, releases…" aria-label="Filter applications"><button onclick="reloadCatalog()">↻ Refresh Releases</button><a class="btn" href="https://github.com/hanefimert2016-oss/FalconOS-Marketplace/releases" target="_blank" rel="noopener">All Releases ↗</a></div>
 <div id="catalog" class="grid"><div class="card">Loading GitHub Releases…</div></div><p id="status"></p></section>
 <section id="code" class="page"><h1>CodeDium Studio</h1><p>Write a safe FalconOS script, test its supported commands and export a real FAPP/1 package. Submit source for review to publish it in the Marketplace.</p>
 <div class="layout">
@@ -34,8 +34,9 @@ input:focus,textarea:focus{border-color:var(--accent)}textarea{resize:vertical;m
 <div><span class="label">Version</span><input id="app-version" value="1.0.0"></div>
 <div><span class="label">Summary</span><input id="app-summary" value="A tiny FalconOS application" maxlength="75"></div>
 <div class="chip">FAPP/1 · Script runtime · 4 KiB max</div>
-<p style="font-size:12px">Publishing submits a GitHub Pull Request using a fine-grained token (Contents + Pull requests: write). The token stays only in this page's memory and is never persisted.</p></aside>
-<div class="card"><div class="toolbar"><button id="run" class="primary">▶ Test script</button><button id="export">↓ Export .app.pkg</button><button id="publish">↑ Submit publication PR</button></div>
+<p style="font-size:12px">Anyone can publish by downloading the source files, forking the repository and opening a PR. Repository collaborators can also use the token-based direct PR shortcut; the token stays in memory and is never stored.</p>
+<a href="https://github.com/hanefimert2016-oss/FalconOS-Marketplace/fork" target="_blank" rel="noopener">Fork the app registry ↗</a></aside>
+<div class="card"><div class="toolbar"><button id="run" class="primary">▶ Test script</button><button id="export">↓ Export .app.pkg</button><button id="export-source">↓ Export source files</button><button id="publish">↑ Collaborator PR</button></div>
 <textarea id="source" spellcheck="false"># CodeDium example
 clear
 echo Hello from CodeDium
@@ -50,6 +51,7 @@ date
 const OWNER="hanefimert2016-oss", REPO="FalconOS-Marketplace", ROOT="https://api.github.com/repos/"+OWNER+"/"+REPO;
 const allow=new Set(["echo","date","uname","uptime","whoami","pwd","ls","help","cal","hwinfo","free","df","clear"]);
 function $(id){return document.getElementById(id)}
+let releaseCatalog=[];
 function show(id){for(const p of ["market","code"])$(p).classList.toggle("active",p===id);$("tab-market").classList.toggle("selected",id==="market");$("tab-code").classList.toggle("selected",id==="code")}
 $("tab-market").onclick=()=>show("market");$("tab-code").onclick=()=>show("code");
 function validate(){
@@ -73,6 +75,8 @@ $("run").onclick=()=>{try{let x=validate(),out=[];for(let line of x.source.split
 $("export").onclick=()=>{try{let x=validate(),url=URL.createObjectURL(new Blob([x.pkg],{type:"application/octet-stream"})),a=document.createElement("a");a.href=url;a.download=x.manifest.id+"-v"+x.manifest.version+".app.pkg";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}catch(e){alert(e.message)}};
 function base64(text){const bytes=new TextEncoder().encode(text);let bin="";for(const b of bytes)bin+=String.fromCharCode(b);return btoa(bin)}
 async function gh(path,token,method="GET",body){const res=await fetch(ROOT+path,{method,headers:{"Accept":"application/vnd.github+json","Authorization":"Bearer "+token,"X-GitHub-Api-Version":"2022-11-28",...(body?{"Content-Type":"application/json"}:{})},body:body?JSON.stringify(body):undefined});const payload=await res.json().catch(()=>({}));if(!res.ok)throw Error(payload.message||"GitHub returned HTTP "+res.status);return payload}
+function downloadText(text,filename,type="text/plain"){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}
+$("export-source").onclick=()=>{try{const x=validate();downloadText(JSON.stringify(x.manifest,null,2)+"\\n","manifest.json","application/json");downloadText(x.source,"main.fsh");$("console").textContent="Source exported: apps/"+x.manifest.id+"/manifest.json + main.fsh. Fork the repo, add these files in the named folder, then open a pull request."}catch(e){alert(e.message)}};
 $("publish").onclick=async()=>{let x;try{x=validate()}catch(e){alert(e.message);return}const token=prompt("Enter a fine-grained GitHub token for this repository (Contents + Pull requests write). It is used once and not stored:");if(!token)return;const button=$("publish");button.disabled=true;button.textContent="Submitting…";
  try{
  const base=await gh("/git/ref/heads/main",token);const sha=base.object.sha;
@@ -90,11 +94,23 @@ async function reloadCatalog(){
  $("status").textContent="Reading GitHub Releases…";
  try{const r=await fetch(ROOT+"/releases?per_page=100",{headers:{"Accept":"application/vnd.github+json"}});if(!r.ok)throw Error("GitHub API HTTP "+r.status);
  const releases=await r.json(),container=$("catalog");container.replaceChildren();let count=0;
- for(const release of releases){const asset=release.assets.find(a=>a.name.endsWith(".app.pkg"));if(!asset)continue;count++;
+ releaseCatalog=releases;
+ renderCatalog();
+ $("status").textContent=releaseCatalog.length+" GitHub release records fetched";}catch(e){$("status").textContent="Catalog unavailable: "+e.message}
+}
+function renderCatalog(){
+ const releases=releaseCatalog, container=$("catalog");container.replaceChildren();
+ const needle=$("catalog-filter").value.trim().toLowerCase();
+ let count=0;
+ for(const release of releases){const asset=release.assets.find(a=>a.name.endsWith(".app.pkg"));if(!asset)continue;
+ if(needle && !(release.name+" "+release.tag_name+" "+asset.name).toLowerCase().includes(needle))continue;
+ count++;
  const card=document.createElement("div");card.className="card";const name=document.createElement("h3");name.textContent=release.name||release.tag_name;const detail=document.createElement("p");detail.textContent="Verified source release · "+asset.name;
  const pill=document.createElement("span");pill.className="chip";pill.textContent=Math.ceil(asset.size/1024)+" KiB · "+release.tag_name;
  const actions=document.createElement("p");const link=document.createElement("a");link.className="btn";link.href=asset.browser_download_url;link.textContent="Download .app.pkg ↗";link.rel="noopener";actions.append(link);card.append(name,detail,pill,actions);container.append(card)}
  if(!count){const card=document.createElement("div");card.className="card";card.textContent="No published Releases yet. Merge an application PR or trigger Publish workflow.";container.append(card)}
- $("status").textContent=count+" downloadable release packages";}catch(e){$("status").textContent="Catalog unavailable: "+e.message}}
+ $("status").textContent=count+" matching .app.pkg packages";
+}
+$("catalog-filter").oninput=renderCatalog;
 window.reloadCatalog=reloadCatalog;reloadCatalog();
 </script></body></html>
