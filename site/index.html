@@ -36,7 +36,7 @@ input:focus,textarea:focus{border-color:var(--accent)}textarea{resize:vertical;m
 <div class="chip">FAPP/1 · Script runtime · 4 KiB max</div>
 <p style="font-size:12px">Anyone can publish by downloading the source files, forking the repository and opening a PR. No GitHub access token is requested by CodeDium; contributions go through GitHub's existing fork and PR permissions.</p>
 <a href="https://github.com/hanefimert2016-oss/FalconOS-Marketplace/fork" target="_blank" rel="noopener">Fork the app registry ↗</a></aside>
-<div class="card"><div class="toolbar"><button id="run" class="primary">▶ Test script</button><button id="export">↓ Export .app.pkg</button><button id="export-source">↓ Export source files</button><button id="publish">↑ Publish via GitHub PR</button></div>
+<div class="card"><div class="toolbar"><button id="run" class="primary">▶ Test script</button><button id="import-pkg">↑ Import .app.pkg</button><input id="import-pkg-file" type="file" accept=".pkg,.app.pkg" style="display:none"><button id="export">↓ Export .app.pkg</button><button id="export-source">↓ Export source files</button><button id="publish">↑ Publish via GitHub PR</button></div>
 <textarea id="source" spellcheck="false"># CodeDium example
 clear
 echo Hello from CodeDium
@@ -66,13 +66,35 @@ function validate(){
  const source=$("source").value.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
  if(!source.endsWith("\n"))throw Error("Script must end with newline");
  if(/[^\x20-\x7E\n]/.test(source))throw Error("Use printable ASCII and LF only");
- source.split("\n").forEach((line,index)=>{if(!line||line.startsWith("#"))return;let cmd=line.trim().split(/\s+/)[0];if(!allow.has(cmd))throw Error("Line "+(index+1)+": unsupported command "+cmd);
- if(line.length>180||/(;|&&|\|\||\||>|<|\x60|\$|\\|&)/.test(line))throw Error("Line "+(index+1)+": prohibited shell operator")});
+ source.split("\n").forEach((line,index)=>{if(line.length>180)throw Error("Line "+(index+1)+": too long");if(!line||line.startsWith("#"))return;let cmd=line.trim().split(/\s+/)[0];if(!allow.has(cmd))throw Error("Line "+(index+1)+": unsupported command "+cmd);
+ if(/(;|&&|\|\||\||>|<|\x60|\$|\\|&)/.test(line))throw Error("Line "+(index+1)+": prohibited shell operator")});
  const manifest={id,name,version,summary};
  const pkg="FAPP/1\n"+"id="+id+"\nname="+name+"\nversion="+version+"\nsummary="+summary+"\n\n"+source;
  if(new TextEncoder().encode(pkg).length>4096)throw Error("Package exceeds 4 KiB limit");
  return {manifest,source,pkg};
 }
+$("import-pkg").onclick=()=>$("import-pkg-file").click();
+$("import-pkg-file").onchange=async()=>{
+ const input=$("import-pkg-file"),file=input.files?.[0];if(!file)return;
+ const keys=["id","name","version","summary"], ids=["app-id","app-name","app-version","app-summary"];
+ const old=ids.map(id=>$(id).value),oldSource=$("source").value;
+ try{
+  if(file.size>4096)throw Error("FAPP/1 packages cannot exceed 4096 bytes");
+  const raw=await file.text(),split=raw.indexOf("\n\n");
+  if(!raw.startsWith("FAPP/1\n")||split<0)throw Error("Expected FAPP/1 header");
+  const header=raw.slice(0,split).split("\n"),script=raw.slice(split+2);
+  if(header.length!==5)throw Error("Invalid FAPP/1 metadata header");
+  keys.forEach((key,i)=>{
+   if(!header[i+1].startsWith(key+"="))throw Error("Unexpected field "+key);
+   $(ids[i]).value=header[i+1].slice(key.length+1);
+  });
+  $("source").value=script;
+  validate();
+  show("code");
+  $("console").textContent="Imported "+file.name+"; edit, test, or export/publish its source.";
+ }catch(e){ids.forEach((id,i)=>$(id).value=old[i]);$("source").value=oldSource;$("console").textContent="Import failed: "+e.message;}
+ finally{input.value="";}
+};
 $("run").onclick=()=>{try{let x=validate(),out=[];for(let line of x.source.split("\n")){if(!line||line[0]==="#")continue;let sp=line.indexOf(" "),cmd=sp<0?line:line.slice(0,sp),arg=sp<0?"":line.slice(sp+1);
  if(cmd==="clear"){out=[];continue}if(cmd==="echo")out.push(arg);else if(cmd==="date")out.push(new Date().toLocaleString());else if(cmd==="uname")out.push("FalconOS x86_64 (preview)");else if(cmd==="whoami")out.push("falcon (preview)");else if(cmd==="pwd")out.push("/home/falcon");else out.push("$ "+cmd+" (available on FalconOS guest)");}
  $("console").textContent=out.join("\n")||"(empty output)";}catch(e){$("console").textContent="ERROR: "+e.message}};
