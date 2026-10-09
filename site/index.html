@@ -34,9 +34,9 @@ input:focus,textarea:focus{border-color:var(--accent)}textarea{resize:vertical;m
 <div><span class="label">Version</span><input id="app-version" value="1.0.0"></div>
 <div><span class="label">Summary</span><input id="app-summary" value="A tiny FalconOS application" maxlength="75"></div>
 <div class="chip">FAPP/1 · Script runtime · 4 KiB max</div>
-<p style="font-size:12px">Anyone can publish by downloading the source files, forking the repository and opening a PR. Repository collaborators can also use the token-based direct PR shortcut; the token stays in memory and is never stored.</p>
+<p style="font-size:12px">Anyone can publish by downloading the source files, forking the repository and opening a PR. No GitHub access token is requested by CodeDium; contributions go through GitHub's existing fork and PR permissions.</p>
 <a href="https://github.com/hanefimert2016-oss/FalconOS-Marketplace/fork" target="_blank" rel="noopener">Fork the app registry ↗</a></aside>
-<div class="card"><div class="toolbar"><button id="run" class="primary">▶ Test script</button><button id="export">↓ Export .app.pkg</button><button id="export-source">↓ Export source files</button><button id="publish">↑ Collaborator PR</button></div>
+<div class="card"><div class="toolbar"><button id="run" class="primary">▶ Test script</button><button id="export">↓ Export .app.pkg</button><button id="export-source">↓ Export source files</button><button id="publish">↑ Publish via GitHub PR</button></div>
 <textarea id="source" spellcheck="false"># CodeDium example
 clear
 echo Hello from CodeDium
@@ -73,23 +73,14 @@ $("run").onclick=()=>{try{let x=validate(),out=[];for(let line of x.source.split
  if(cmd==="clear"){out=[];continue}if(cmd==="echo")out.push(arg);else if(cmd==="date")out.push(new Date().toLocaleString());else if(cmd==="uname")out.push("FalconOS x86_64 (preview)");else if(cmd==="whoami")out.push("falcon (preview)");else if(cmd==="pwd")out.push("/home/falcon");else out.push("$ "+cmd+" (available on FalconOS guest)");}
  $("console").textContent=out.join("\n")||"(empty output)";}catch(e){$("console").textContent="ERROR: "+e.message}};
 $("export").onclick=()=>{try{let x=validate(),url=URL.createObjectURL(new Blob([x.pkg],{type:"application/octet-stream"})),a=document.createElement("a");a.href=url;a.download=x.manifest.id+"-v"+x.manifest.version+".app.pkg";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}catch(e){alert(e.message)}};
-function base64(text){const bytes=new TextEncoder().encode(text);let bin="";for(const b of bytes)bin+=String.fromCharCode(b);return btoa(bin)}
-async function gh(path,token,method="GET",body){const res=await fetch(ROOT+path,{method,headers:{"Accept":"application/vnd.github+json","Authorization":"Bearer "+token,"X-GitHub-Api-Version":"2022-11-28",...(body?{"Content-Type":"application/json"}:{})},body:body?JSON.stringify(body):undefined});const payload=await res.json().catch(()=>({}));if(!res.ok)throw Error(payload.message||"GitHub returned HTTP "+res.status);return payload}
-function downloadText(text,filename,type="text/plain"){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}
-$("export-source").onclick=()=>{try{const x=validate();downloadText(JSON.stringify(x.manifest,null,2)+"\n","manifest.json","application/json");downloadText(x.source,"main.fsh");$("console").textContent="Source exported: apps/"+x.manifest.id+"/manifest.json + main.fsh. Fork the repo, add these files in the named folder, then open a pull request."}catch(e){alert(e.message)}};
-$("publish").onclick=async()=>{let x;try{x=validate()}catch(e){alert(e.message);return}const token=prompt("Enter a fine-grained GitHub token for this repository (Contents + Pull requests write). It is used once and not stored:");if(!token)return;const button=$("publish");button.disabled=true;button.textContent="Submitting…";
- try{
- const base=await gh("/git/ref/heads/main",token);const sha=base.object.sha;
- const branch="codedium/"+x.manifest.id+"-"+Date.now();
- await gh("/git/refs",token,"POST",{ref:"refs/heads/"+branch,sha});
- for(const [filename,content] of [["manifest.json",JSON.stringify(x.manifest,null,2)+"\n"],["main.fsh",x.source]]){
-   const path="apps/"+x.manifest.id+"/"+filename;let existing=null;
-   try{existing=await gh("/contents/"+path+"?ref="+encodeURIComponent(branch),token)}catch(e){if(!/Not Found/.test(e.message))throw e}
-   await gh("/contents/"+path,token,"PUT",{message:"feat(app): "+x.manifest.id+" "+filename,content:base64(content),branch,...(existing?{sha:existing.sha}:{})});
- }
- const pr=await gh("/pulls",token,"POST",{title:"Publish "+x.manifest.name+" v"+x.manifest.version,head:branch,base:"main",body:"Created in CodeDium Studio. Review command allowlist and verify package before merging."});
- $("console").textContent="Publication review PR created: "+pr.html_url+"\nOn merge, CI releases the .app.pkg artifact.";window.open(pr.html_url,"_blank","noopener");
- }catch(e){$("console").textContent="Could not submit PR: "+e.message+"\nCheck token permissions (Contents and Pull Requests: write).";}finally{button.disabled=false;button.textContent="↑ Submit publication PR"}};
+$("publish").onclick=()=>{
+ try {
+  const x=validate();
+  $("export-source").click();
+  $("console").textContent="Publish "+x.manifest.name+":\n1) Fork FalconOS-Marketplace\n2) Add manifest.json and main.fsh under apps/"+x.manifest.id+"/\n3) Open a pull request against main\n4) CI validates and publishes a versioned Release once merged.";
+  window.open("https://github.com/hanefimert2016-oss/FalconOS-Marketplace/fork","_blank","noopener");
+ } catch(e) { $("console").textContent="ERROR: "+e.message; }
+};
 async function reloadCatalog(){
  $("status").textContent="Reading GitHub Releases…";
  try{const r=await fetch(ROOT+"/releases?per_page=100",{headers:{"Accept":"application/vnd.github+json"}});if(!r.ok)throw Error("GitHub API HTTP "+r.status);
