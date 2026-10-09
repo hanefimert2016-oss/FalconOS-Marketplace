@@ -31,12 +31,12 @@ input:focus,textarea:focus{border-color:var(--accent)}textarea{resize:vertical;m
 <div class="layout">
 <aside class="card fields"><div><span class="label">Application ID</span><input id="app-id" value="my-first-app" maxlength="32" spellcheck="false"></div>
 <div><span class="label">Display name</span><input id="app-name" value="My First App" maxlength="40"></div>
-<div><span class="label">Version</span><input id="app-version" value="1.0.0"></div>
+<div><span class="label">Version</span><input id="app-version" value="1.0.0" maxlength="24"></div>
 <div><span class="label">Summary</span><input id="app-summary" value="A tiny FalconOS application" maxlength="75"></div>
 <div class="chip">FAPP/1 · Script runtime · 4 KiB max</div>
 <p style="font-size:12px">Anyone can publish by downloading the source files, forking the repository and opening a PR. No GitHub access token is requested by CodeDium; contributions go through GitHub's existing fork and PR permissions.</p>
 <a href="https://github.com/hanefimert2016-oss/FalconOS-Marketplace/fork" target="_blank" rel="noopener">Fork the app registry ↗</a></aside>
-<div class="card"><div class="toolbar"><button id="run" class="primary">▶ Test script</button><button id="import-pkg">↑ Import .app.pkg</button><input id="import-pkg-file" type="file" accept=".pkg,.app.pkg" style="display:none"><button id="export">↓ Export .app.pkg</button><button id="export-source">↓ Export source files</button><button id="publish">↑ Publish via GitHub PR</button></div>
+<div class="card"><div class="toolbar"><button id="run" class="primary">▶ Test script</button><button id="import-pkg">↑ Import .app.pkg</button><input id="import-pkg-file" type="file" accept=".pkg,.app.pkg" style="display:none"><button id="export">↓ Export .app.pkg</button><button id="export-source">↓ Export source files</button><button id="import-pkg">↑ Import .app.pkg</button><input id="import-file" type="file" accept=".pkg,.app.pkg,text/plain" hidden aria-label="Import FalconOS application package"><button id="publish">↑ Publish via GitHub PR</button></div>
 <textarea id="source" spellcheck="false"># CodeDium example
 clear
 echo Hello from CodeDium
@@ -99,6 +99,52 @@ $("run").onclick=()=>{try{let x=validate(),out=[];for(let line of x.source.split
  if(cmd==="clear"){out=[];continue}if(cmd==="echo")out.push(arg);else if(cmd==="date")out.push(new Date().toLocaleString());else if(cmd==="uname")out.push("FalconOS x86_64 (preview)");else if(cmd==="whoami")out.push("falcon (preview)");else if(cmd==="pwd")out.push("/home/falcon");else out.push("$ "+cmd+" (available on FalconOS guest)");}
  $("console").textContent=out.join("\n")||"(empty output)";}catch(e){$("console").textContent="ERROR: "+e.message}};
 $("export").onclick=()=>{try{let x=validate(),url=URL.createObjectURL(new Blob([x.pkg],{type:"application/octet-stream"})),a=document.createElement("a");a.href=url;a.download=x.manifest.id+"-v"+x.manifest.version+".app.pkg";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}catch(e){alert(e.message)}};
+
+function saveFile(name, contents, type="text/plain") {
+ const url=URL.createObjectURL(new Blob([contents],{type})), a=document.createElement("a");
+ a.href=url;a.download=name;document.body.append(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
+$("export-source").onclick=()=>{
+ try {
+  const {manifest,source}=validate(), prefix=manifest.id+"-v"+manifest.version;
+  saveFile(prefix+"-manifest.json",JSON.stringify(manifest,null,2)+"\n","application/json");
+  saveFile(prefix+"-main.fsh",source);
+  $("console").textContent="Source files downloaded. In your fork, create apps/"+manifest.id+"/manifest.json and apps/"+manifest.id+"/main.fsh using these contents. Your browser may ask permission for multiple downloads.";
+ } catch(e){$("console").textContent="ERROR: "+e.message}
+};
+function parsePackage(raw){
+ if(new TextEncoder().encode(raw).length>4096)throw Error("Package exceeds 4 KiB");
+ if(!raw.startsWith("FAPP/1\n"))throw Error("Invalid FAPP/1 header");
+ const sep=raw.indexOf("\n\n",7);
+ if(sep<0)throw Error("Missing metadata/script separator");
+ const lines=raw.slice(7,sep).split("\n"), fields={}, allowed=["id","name","version","summary"];
+ for(const line of lines){
+  const pos=line.indexOf("="),key=line.slice(0,pos);
+  if(pos<1||!allowed.includes(key)||Object.hasOwn(fields,key))throw Error("Invalid package metadata");
+  fields[key]=line.slice(pos+1);
+ }
+ if(allowed.some(key=>typeof fields[key]!=="string"))throw Error("Missing package metadata");
+ const source=raw.slice(sep+2);
+ return {fields,source};
+}
+$("import-pkg").onclick=()=>$("import-file").click();
+$("import-file").onchange=async()=>{
+ try {
+  const file=$("import-file").files?.[0];if(!file)return;
+  if(file.size>4096)throw Error("Package exceeds 4 KiB");
+  const {fields,source}=parsePackage((await file.text()).replace(/\r\n/g,"\n"));
+  const old=["app-id","app-name","app-version","app-summary","source"].map(id=>$(id).value);
+  const ids=["app-id","app-name","app-version","app-summary"];
+  ids.forEach((id,i)=>$(id).value=fields[["id","name","version","summary"][i]]);
+  $("source").value=source;
+  try{validate()}catch(e){[...ids,"source"].forEach((id,i)=>$(id).value=old[i]);throw e}
+  show("code");
+  $("console").textContent="Imported "+fields.id+" v"+fields.version+"; script is ready to edit.";
+ }catch(e){$("console").textContent="ERROR: "+e.message}
+ finally{$("import-file").value=""}
+};
+
 $("publish").onclick=()=>{
  try {
   const x=validate();
@@ -122,9 +168,9 @@ function renderCatalog(){
  for(const release of releases){const asset=release.assets.find(a=>a.name.endsWith(".app.pkg"));if(!asset)continue;
  if(needle && !(release.name+" "+release.tag_name+" "+asset.name).toLowerCase().includes(needle))continue;
  count++;
- const card=document.createElement("div");card.className="card";const name=document.createElement("h3");name.textContent=release.name||release.tag_name;const detail=document.createElement("p");detail.textContent="Verified source release · "+asset.name;
+ const card=document.createElement("div");card.className="card";const name=document.createElement("h3");name.textContent=release.name||release.tag_name;const detail=document.createElement("p");detail.textContent="Source-reviewed release · "+asset.name;
  const pill=document.createElement("span");pill.className="chip";pill.textContent=Math.ceil(asset.size/1024)+" KiB · "+release.tag_name;
- const actions=document.createElement("p");const link=document.createElement("a");link.className="btn";link.href=asset.browser_download_url;link.textContent="Download .app.pkg ↗";link.rel="noopener";actions.append(link);card.append(name,detail,pill,actions);container.append(card)}
+ const actions=document.createElement("p");const link=document.createElement("a");link.className="btn";link.href=asset.browser_download_url;link.textContent="Download .app.pkg ↗";link.rel="noopener";actions.append(link);const sum=release.assets.find(a=>a.name===asset.name+".sha256");if(sum){const check=document.createElement("a");check.href=sum.browser_download_url;check.rel="noopener";check.textContent=" · SHA-256 checksum";actions.append(check)}card.append(name,detail,pill,actions);container.append(card)}
  if(!count){const card=document.createElement("div");card.className="card";card.textContent="No published Releases yet. Merge an application PR or trigger Publish workflow.";container.append(card)}
  $("status").textContent=count+" matching .app.pkg packages";
 }
