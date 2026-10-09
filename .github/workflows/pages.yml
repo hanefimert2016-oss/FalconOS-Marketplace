@@ -19,11 +19,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
+      - name: Save downloadable site preview
+        uses: actions/upload-artifact@v4
         with:
-          enablement: true
+          name: FalconOS-Marketplace-site-preview
+          path: site/
+          retention-days: 30
+      - name: Check repository Pages configuration
+        id: pages-check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/pages" >/dev/null 2>&1; then
+            echo "enabled=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "enabled=false" >> "${GITHUB_OUTPUT}"
+            echo "::warning::GitHub Pages is not enabled. Repository owner must open Settings > Pages and set Source to GitHub Actions. Static site preview was uploaded as a workflow artifact."
+          fi
+      - uses: actions/configure-pages@v5
+        if: steps.pages-check.outputs.enabled == 'true'
       - uses: actions/upload-pages-artifact@v3
+        if: steps.pages-check.outputs.enabled == 'true'
         with:
           path: site
       - id: deployment
         uses: actions/deploy-pages@v4
+        if: steps.pages-check.outputs.enabled == 'true'
