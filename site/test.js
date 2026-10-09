@@ -12,7 +12,7 @@ const initial={
 const nodes=new Map(), clicks=[];
 function element(id){
  if(!nodes.has(id)) nodes.set(id,{
-   value: initial[id]??"", textContent:"", files:[],
+   value: initial[id]??"", textContent:"", files:[], style:{},dataset:{},
    classList:{toggle(){}}, replaceChildren(){}, append(){},
    click(){clicks.push({download:this.download,href:this.href})}, remove(){},
    setAttribute(){}, getAttribute(){return null}
@@ -53,3 +53,13 @@ assert.equal(parsed.fields.id,"my-first-app");
 assert.equal(parsed.source,initial.source);
 assert.throws(()=>vm.runInContext('parsePackage("invalid")',context),/FAPP\/1/);
 console.log("CodeDium validation, package import and two-file export tests passed");
+
+// Regression: CodeDium must have exactly one import trigger, not duplicated IDs.
+assert.equal((html.match(/id="import-pkg"/g)||[]).length,1);
+assert.equal((html.match(/id="import-file"/g)||[]).length,1);
+assert.match(html,/async function loadNativeCatalog\(/);
+assert.match(html,/FCAT\/1/);
+// A real FCAT/1 entry can be filtered and shown without Releases.
+vm.runInContext("nativeCatalog=[{id:'hello-world',name:'Hello World',version:'1.0.0',sha:'a'.repeat(64),file:'hello-world-v1.0.0.app.pkg'}];renderCatalog()",context);
+assert.equal(element("status").dataset.visible,"1");
+console.log("Contour Next FCAT/1 and import button regression checks passed");
