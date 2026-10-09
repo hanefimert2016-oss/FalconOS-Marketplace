@@ -40,7 +40,7 @@ function rejects(id,value,pattern){
 rejects("app-id","../evil",/ID:/);
 rejects("app-version","1.0.0-alpha.01",/prerelease/);
 rejects("source","echo hello | sh\n",/prohibited/);
-rejects("source","# "+"x".repeat(181)+"\n",/180 characters/);
+rejects("source","# "+"x".repeat(181)+"\n",/too long|180 characters/);
 rejects("source","echo bad\tcommand\n",/printable ASCII/);
 
 // The browser export must produce both files required by the GitHub source registry.
