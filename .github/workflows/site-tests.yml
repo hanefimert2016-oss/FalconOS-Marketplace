@@ -25,3 +25,4 @@ jobs:
           Path('/tmp/falcon-codedium.js').write_text(html.split('<script>')[1].split('</script>')[0])
           PY
           node --check /tmp/falcon-codedium.js
+          node site/test.js
