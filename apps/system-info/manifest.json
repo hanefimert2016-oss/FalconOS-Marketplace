@@ -1,0 +1,6 @@
+{
+  "id": "system-info",
+  "name": "System Info",
+  "version": "1.0.0",
+  "summary": "Inspect the FalconOS environment"
+}
