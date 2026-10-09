@@ -1,0 +1,27 @@
+name: CodeDium Studio syntax checks
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', '.github/workflows/site-tests.yml']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check HTML structure and inline JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html = Path('site/index.html').read_text(encoding='utf-8')
+          assert html.count('<script>') == 1
+          assert html.count('</script>') == 1
+          assert 'CodeDium Studio' in html
+          assert '.app.pkg' in html
+          Path('/tmp/falcon-codedium.js').write_text(html.split('<script>')[1].split('</script>')[0])
+          PY
+          node --check /tmp/falcon-codedium.js
