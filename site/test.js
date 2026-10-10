@@ -1,4 +1,4 @@
-// Headless smoke tests for CodeDium, using Node's built-in APIs only.
+// Headless smoke tests for Codedium, using Node's built-in APIs only.
 "use strict";
 const fs=require("node:fs"),vm=require("node:vm"),assert=require("node:assert/strict");
 const html=fs.readFileSync("site/index.html","utf8");
@@ -7,7 +7,7 @@ assert(script,"Expected one inline application script");
 const initial={
  "app-id":"my-first-app","app-name":"My First App","app-version":"1.0.0",
  "app-summary":"A tiny FalconOS application",
- "source":"# CodeDium example\nclear\necho Hello from CodeDium\nuname\ndate\n"
+ "source":"# Codedium example\nclear\necho Hello from Codedium\nuname\ndate\n"
 };
 const nodes=new Map(), clicks=[];
 function element(id){
@@ -52,4 +52,4 @@ const parsed=vm.runInContext("parsePackage(validate().pkg)",context);
 assert.equal(parsed.fields.id,"my-first-app");
 assert.equal(parsed.source,initial.source);
 assert.throws(()=>vm.runInContext('parsePackage("invalid")',context),/FAPP\/1/);
-console.log("CodeDium validation, package import and two-file export tests passed");
+console.log("Codedium validation, package import and two-file export tests passed");
