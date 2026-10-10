@@ -2,7 +2,7 @@ name: Publish FalconOS App Releases
 on:
   push:
     branches: [main]
-    paths: ['apps/**', 'tools/build_packages.py', '.github/workflows/publish.yml']
+    paths: ['apps/**', 'site/native/**', 'tools/build_packages.py', '.github/workflows/publish.yml']
   pull_request:
     branches: [main]
   workflow_dispatch:
