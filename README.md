@@ -9,7 +9,7 @@ and `<id>-v<version>.app.pkg.sha256` for integrity checking.
 Each *version* receives its own immutable GitHub Release, tagged `app-<id>-v<version>`.
 
 ## Publish
-1. Develop your FAPP/1 app with CodeDium Studio or edit its source files manually.
+1. Develop your FAPP/1 app with Codedium Studio or edit its source files manually.
 2. Submit the app's source via a Pull Request to this repository.
 3. Review and merge the PR to the `main` branch.
 4. GitHub Actions validates, builds and publishes a release asset for each newly tagged version.
@@ -33,6 +33,6 @@ python3 -m unittest discover -s tests -v
 The browser IDE source lives in `site/index.html`. It can validate, preview, import an existing `.app.pkg`, export a `.app.pkg` or the two required source files, and guide contributors to a GitHub fork/PR. It does not ask for GitHub tokens or merge submissions automatically.
 
 ## Enable the website once
-The `Publish CodeDium + Marketplace website` workflow saves the static website as an Actions artifact even when Pages is disabled. To serve it publicly, the **repository owner** must open **Settings → Pages → Build and deployment** and select **GitHub Actions** as the source. Re-run the workflow after enabling it. A successful preview-artifact workflow run alone does not mean the public Pages URL is live.
+The `Publish Codedium + Marketplace website` workflow saves the static website as an Actions artifact even when Pages is disabled. To serve it publicly, the **repository owner** must open **Settings → Pages → Build and deployment** and select **GitHub Actions** as the source. Re-run the workflow after enabling it. A successful preview-artifact workflow run alone does not mean the public Pages URL is live.
 
 The marketplace web UI lists published GitHub Release assets and exposes each asset's `.sha256` sidecar. Users must verify downloaded files; a checksum is **not** a publisher identity signature. A full guest-local network stack is not currently available. The experimental `feature/marketplace-codedium` FalconOS branch uses a QEMU serial-to-host HTTPS bridge, not direct guest HTTPS.
