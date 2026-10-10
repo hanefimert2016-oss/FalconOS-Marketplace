@@ -1,4 +1,4 @@
-name: CodeDium Studio syntax checks
+name: Codedium Studio syntax checks
 on:
   push:
     branches: [main]
@@ -20,7 +20,7 @@ jobs:
           html = Path('site/index.html').read_text(encoding='utf-8')
           assert html.count('<script>') == 1
           assert html.count('</script>') == 1
-          assert 'CodeDium Studio' in html
+          assert 'Codedium Studio' in html
           assert '.app.pkg' in html
           Path('/tmp/falcon-codedium.js').write_text(html.split('<script>')[1].split('</script>')[0])
           PY
