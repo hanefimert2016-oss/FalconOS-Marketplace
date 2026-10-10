@@ -1,0 +1,6 @@
+{
+  "id": "falcon-test",
+  "name": "FalconOS Test App",
+  "version": "1.0.0",
+  "summary": "Verify Marketplace download and execution"
+}
