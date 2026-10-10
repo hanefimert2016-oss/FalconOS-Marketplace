@@ -1,3 +1,4 @@
 FCAT/1
 CAT|hello-world|1.0.0|Hello World|eb045bbfa6feed47ff21adbca4af4af256fcc744c7799f1e21f56461dbe743ad|hello-world-v1.0.0.app.pkg
 CAT|system-info|1.0.0|System Info|85b8cff9dbdffb366fe260d34afa1220b8bd775f85d1845cdaf61824a15df451|system-info-v1.0.0.app.pkg
+CAT|falcon-test|1.0.0|FalconOS Test App|3632621e40b5c8c219e6381f163fa0673711a2539ba7c2e360d9be235765c06f|falcon-test-v1.0.0.app.pkg

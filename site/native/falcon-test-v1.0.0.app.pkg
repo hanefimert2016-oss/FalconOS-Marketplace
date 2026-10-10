@@ -1,0 +1,12 @@
+FAPP/1
+id=falcon-test
+name=FalconOS Test App
+version=1.0.0
+summary=Verify Marketplace download and execution
+
+# Official Marketplace smoke test
+clear
+echo FalconOS Marketplace test passed
+echo This package was downloaded from GitHub Releases
+uname
+date
