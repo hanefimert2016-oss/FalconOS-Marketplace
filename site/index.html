@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FalconOS Marketplace · CodeDium</title>
+<title>FalconOS Marketplace · Codedium</title>
 <style>
 :root{color-scheme:dark;--bg:#0b1020;--panel:#111a2d;--edge:#283653;--fg:#ebf3ff;--muted:#91a0bc;--accent:#7daaff;--soft:#192942}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px system-ui,Segoe UI,sans-serif}
@@ -22,24 +22,24 @@ input:focus,textarea:focus{border-color:var(--accent)}textarea{resize:vertical;m
 @media(max-width:760px){header{flex-wrap:wrap}.layout{grid-template-columns:1fr}.grid{grid-template-columns:1fr}h1{font-size:23px}}
 </style></head><body>
 <header><div class="brand">◈ Falcon<span>OS</span> <small style="font-size:11px;color:#93a4c4">MARKETPLACE</small></div>
-<nav class="tabs"><button id="tab-market" class="selected">Marketplace</button><button id="tab-code">CodeDium Studio</button></nav></header>
+<nav class="tabs"><button id="tab-market" class="selected">Marketplace</button><button id="tab-code">Codedium Studio</button></nav></header>
 <main>
 <section id="market" class="page active"><h1>Explore applications</h1><p>Download verified, versioned .app.pkg assets from GitHub Releases. Source code is public and reviewed before publishing.</p>
 <div class="toolbar"><input id="catalog-filter" style="max-width:340px" placeholder="Search apps, releases…" aria-label="Filter applications"><button onclick="reloadCatalog()">↻ Refresh Releases</button><a class="btn" href="https://github.com/hanefimert2016-oss/FalconOS-Marketplace/releases" target="_blank" rel="noopener">All Releases ↗</a></div>
 <div id="catalog" class="grid"><div class="card">Loading GitHub Releases…</div></div><p id="status"></p></section>
-<section id="code" class="page"><h1>CodeDium Studio</h1><p>Write a safe FalconOS script, test its supported commands and export a real FAPP/1 package. Submit source for review to publish it in the Marketplace.</p>
+<section id="code" class="page"><h1>Codedium Studio</h1><p>Write a safe FalconOS script, test its supported commands and export a real FAPP/1 package. Submit source for review to publish it in the Marketplace.</p>
 <div class="layout">
 <aside class="card fields"><div><span class="label">Application ID</span><input id="app-id" value="my-first-app" maxlength="32" spellcheck="false"></div>
 <div><span class="label">Display name</span><input id="app-name" value="My First App" maxlength="40"></div>
 <div><span class="label">Version</span><input id="app-version" value="1.0.0" maxlength="24"></div>
 <div><span class="label">Summary</span><input id="app-summary" value="A tiny FalconOS application" maxlength="75"></div>
 <div class="chip">FAPP/1 · Script runtime · 4 KiB max</div>
-<p style="font-size:12px">Anyone can publish by downloading the source files, forking the repository and opening a PR. No GitHub access token is requested by CodeDium; contributions go through GitHub's existing fork and PR permissions.</p>
+<p style="font-size:12px">Anyone can publish by downloading the source files, forking the repository and opening a PR. No GitHub access token is requested by Codedium; contributions go through GitHub's existing fork and PR permissions.</p>
 <a href="https://github.com/hanefimert2016-oss/FalconOS-Marketplace/fork" target="_blank" rel="noopener">Fork the app registry ↗</a></aside>
 <div class="card"><div class="toolbar"><button id="run" class="primary">▶ Test script</button><button id="import-pkg">↑ Import .app.pkg</button><input id="import-pkg-file" type="file" accept=".pkg,.app.pkg" style="display:none"><button id="export">↓ Export .app.pkg</button><button id="export-source">↓ Export source files</button><button id="import-pkg">↑ Import .app.pkg</button><input id="import-file" type="file" accept=".pkg,.app.pkg,text/plain" hidden aria-label="Import FalconOS application package"><button id="publish">↑ Publish via GitHub PR</button></div>
-<textarea id="source" spellcheck="false"># CodeDium example
+<textarea id="source" spellcheck="false"># Codedium example
 clear
-echo Hello from CodeDium
+echo Hello from Codedium
 uname
 date
 </textarea>
