@@ -1,4 +1,4 @@
-name: Publish CodeDium + Marketplace website
+name: Publish Codedium + Marketplace website
 on:
   push:
     branches: [main]
