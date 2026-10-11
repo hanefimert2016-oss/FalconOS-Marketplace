@@ -1,0 +1,10 @@
+FAPP/1
+id=storage-center
+name=Storage Center
+version=1.0.0
+summary=Inspect safe FalconFS mounts and journal health in native UI
+
+# Storage Center - original FalconOS native filesystem inspector
+# Read-only JFS2 and XFS1 metrics, safe PFS flush via F5.
+# No physical USB raw writes, formatting or disk partitions.
+storagecenter
