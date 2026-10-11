@@ -1,0 +1,8 @@
+FAPP/1
+id=theme-creator
+name=Theme Creator
+version=1.0.0
+summary=Edit your native FalconOS palettes
+
+# Theme Creator opens the real builtin FalconOS native editor
+themecreator
