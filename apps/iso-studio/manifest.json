@@ -2,5 +2,5 @@
   "id": "iso-studio",
   "name": "ISO Studio",
   "version": "1.0.0",
-  "summary": "Build a verified ISO9660 on safe FalconFS JFS2; USB write not available"
+  "summary": "Build verified ISO9660 images on FalconFS JFS2, no USB writes"
 }
