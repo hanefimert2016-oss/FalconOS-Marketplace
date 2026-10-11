@@ -1,0 +1,6 @@
+{
+  "id": "storage-center",
+  "name": "Storage Center",
+  "version": "1.0.0",
+  "summary": "Inspect safe FalconFS mounts and journal health in native UI"
+}
