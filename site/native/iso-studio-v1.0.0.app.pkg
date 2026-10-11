@@ -1,0 +1,11 @@
+FAPP/1
+id=iso-studio
+name=ISO Studio
+version=1.0.0
+summary=Build verified ISO9660 images on FalconFS JFS2, no USB writes
+
+# ISO Studio - real FalconOS ISO9660 generator
+# This uses FalconOS native app engine, not Linux or Windows binaries.
+# Builds one-file ISO9660 archive on dedicated 0xFA FalconFS storage.
+# No physical USB writing; never format a host block device.
+isostudio
