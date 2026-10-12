@@ -36,3 +36,7 @@ The browser IDE source lives in `site/index.html`. It can validate, preview, imp
 The `Publish Codedium + Marketplace website` workflow saves the static website as an Actions artifact even when Pages is disabled. To serve it publicly, the **repository owner** must open **Settings → Pages → Build and deployment** and select **GitHub Actions** as the source. Re-run the workflow after enabling it. A successful preview-artifact workflow run alone does not mean the public Pages URL is live.
 
 The marketplace web UI lists published GitHub Release assets and exposes each asset's `.sha256` sidecar. Users must verify downloaded files; a checksum is **not** a publisher identity signature. A full guest-local network stack is not currently available. The experimental `feature/marketplace-codedium` FalconOS branch uses a QEMU serial-to-host HTTPS bridge, not direct guest HTTPS.
+
+## AeroFlow V2 verified app collection (October 2026)
+
+The native FAPP/1 collection now includes **Device Doctor**, **Calendar Desk**, **Code Lab**, **Workspace Hub**, and **Design Studio**. They use the already available native FalconOS APIs through four intentionally permission-limited GUI buttons. These are lightweight sandbox-policy scripts, **not Linux/Windows native binaries**. See source under `apps/<id>` and the exact SHA-256-checked package snapshot under `site/native/`. Install with FalconOS Discover while the Marketplace HTTPS bridge is active.

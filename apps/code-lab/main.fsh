@@ -1,0 +1,8 @@
+# Code Lab: reviewed native FalconOS utilities
+#ui:title=Code Lab
+#ui:text=Open the real Codedium editor and inspect native workspace information.
+#ui:button=Open Codedium|codedium
+#ui:button=Current folder|pwd
+#ui:button=List files|ls
+#ui:button=Shell help|help
+echo Code Lab is ready. Choose an action above.

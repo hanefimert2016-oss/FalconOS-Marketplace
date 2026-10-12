@@ -6,3 +6,8 @@ CAT|iso-studio|1.0.0|ISO Studio|65e2e85786df6e741f3d8f57d1d1453fd24e5a572c85eea0
 CAT|storage-center|1.0.0|Storage Center|26daa74d89acf79f150c4f2d2f1b41158d5caad959bc4b5db31e94bee6643f2e|storage-center-v1.0.0.app.pkg
 CAT|theme-creator|1.0.0|Theme Creator|f5d55a8192e842b0f73de0596459f111ead86a5aeac9c59a08d0f06121163c79|theme-creator-v1.0.0.app.pkg
 CAT|codedium-studio|1.0.0|Codedium Studio|ee9943c403c2e77440311fd573575831d1b03a7bbe88cd7d401991561b216061|codedium-studio-v1.0.0.app.pkg
+CAT|device-doctor|1.0.0|Device Doctor|95b1c86b42abb75a2061ed5819825bbec8794b3bf252522109890b9cb667543f|device-doctor-v1.0.0.app.pkg
+CAT|calendar-desk|1.0.0|Calendar Desk|2735a502e2cc9a02f3a798b11d5f7cde626802df743644594d8a75dd56fb508b|calendar-desk-v1.0.0.app.pkg
+CAT|code-lab|1.0.0|Code Lab|00499c29923b9bb99bfa619b8671f8f85b7c07a95d57432c7b359cf79882dbfd|code-lab-v1.0.0.app.pkg
+CAT|workspace-hub|1.0.0|Workspace Hub|7658ec43b6afaa59ac87b4df7f9e43d6b2f14567eebd8670e259ef0b8abe670b|workspace-hub-v1.0.0.app.pkg
+CAT|design-studio|1.0.0|Design Studio|3ccaa94afa977e496af83a0887df992380fefa55a1c5c2505f81d881171c08ff|design-studio-v1.0.0.app.pkg

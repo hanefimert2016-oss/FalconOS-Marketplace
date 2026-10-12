@@ -1,0 +1,6 @@
+{
+  "id": "device-doctor",
+  "name": "Device Doctor",
+  "version": "1.0.0",
+  "summary": "Native system health dashboard with real read-only diagnostics"
+}
