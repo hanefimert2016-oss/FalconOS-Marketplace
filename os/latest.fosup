@@ -1,6 +1,6 @@
 FOSUP/1
-version=2.0.1-beta
-tag=os-v2.0.1-beta
-asset=FalconOS-2.0.1-beta.iso
-sha256=f34737366940bac54cfad343aa811a7e066db7ab6c956688d4372628571753e9
+version=2.0.2-beta
+tag=os-v2.0.2-beta
+asset=FalconOS-2.0.2-beta.iso
+sha256=ab490b41e56d2dce038a2748ae0e9ba6e48f1cd4c8321eb6d31f730b63c827ba
 bytes=25542656
