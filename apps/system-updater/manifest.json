@@ -1,0 +1,6 @@
+{
+  "id": "system-updater",
+  "name": "System Updater",
+  "version": "1.0.0",
+  "summary": "Open native FalconOS OS update manager and verified ISO controls"
+}
