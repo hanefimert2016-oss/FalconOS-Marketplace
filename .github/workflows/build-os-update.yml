@@ -1,0 +1,86 @@
+name: Build and publish FalconOS OS update
+on:
+  push:
+    branches: [updates]
+    paths:
+      - 'os/source.json'
+      - '.github/workflows/build-os-update.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: falconos-os-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: updates
+          fetch-depth: 1
+      - name: Resolve immutable FalconOS source
+        shell: bash
+        run: |
+          python3 - <<'PY' >> "$GITHUB_ENV"
+          import json,re
+          data=json.load(open('os/source.json'))
+          assert data['version']=='2.0.1-beta'
+          assert data['source_repository']=='hanefimert2016-oss/FalconOS'
+          assert re.fullmatch(r'[0-9a-f]{40}',data['source_commit'])
+          print('KERNEL_SOURCE_SHA='+data['source_commit'])
+          PY
+      - name: Build native GRUB-free update ISO from reviewed source
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq nasm xorriso mtools clang lld binutils gcc python3
+          mkdir source-checkout
+          git -C source-checkout init -q
+          git -C source-checkout remote add origin https://github.com/hanefimert2016-oss/FalconOS.git
+          git -C source-checkout fetch --depth=1 origin "$KERNEL_SOURCE_SHA"
+          git -C source-checkout checkout --detach FETCH_HEAD
+          make -C source-checkout iso ENABLE_BOOT_GLB=0 ENABLE_BEARSSL=0 EXTRA_CFLAGS='-DFALCON_OS_UPDATE_VERSION=201'
+          strings source-checkout/build/falcon.elf | grep -F 'FalconOS 2.0.1 Beta'
+          file source-checkout/build/BOOTX64.EFI | grep -F 'PE32+'
+          test -s source-checkout/build/FalconOS.iso
+      - name: Publish immutable ISO and manifest
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION='2.0.1-beta'
+          TAG="os-v${VERSION}"
+          ASSET="FalconOS-${VERSION}.iso"
+          cp source-checkout/build/FalconOS.iso "${ASSET}"
+          SIZE=$(wc -c < "${ASSET}")
+          SHA=$(sha256sum "${ASSET}" | awk '{print $1}')
+          sha256sum "${ASSET}" > "${ASSET}.sha256"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Immutable update release already exists: $TAG"
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" -p "${ASSET}" -D /tmp/verified-release
+            test "$SHA" = "$(sha256sum "/tmp/verified-release/${ASSET}" | awk '{print $1}')"
+          else
+            gh release create "$TAG" "${ASSET}" "${ASSET}.sha256" --repo "$GITHUB_REPOSITORY" \
+              --title "FalconOS ${VERSION} UEFI system update" --latest=false \
+              --notes "Bootable native FalconBoot UEFI ISO from pinned FalconOS source $KERNEL_SOURCE_SHA. For QEMU/OVMF only. No physical drive updates."
+          fi
+          printf 'FOSUP/1\nversion=%s\ntag=%s\nasset=%s\nsha256=%s\nbytes=%s\n' \
+            "$VERSION" "$TAG" "$ASSET" "$SHA" "$SIZE" > os/latest.fosup
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add os/latest.fosup
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(updates): register verified ${VERSION} ISO digest [skip ci]"
+            git push origin HEAD:updates
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FalconOS-UEFI-Update-2.0.1-beta
+          path: |
+            FalconOS-2.0.1-beta.iso
+            FalconOS-2.0.1-beta.iso.sha256
+            os/latest.fosup
+          retention-days: 30
