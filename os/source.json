@@ -1,6 +1,6 @@
 {
-  "version": "2.0.1-beta",
+  "version": "2.0.2-beta",
   "source_repository": "hanefimert2016-oss/FalconOS",
-  "source_commit": "93752f16dd971278668c74bf63570afdc932013d",
+  "source_commit": "07c1cd00525ec911a6659c76e3444e057c72f0da",
   "channel": "updates"
 }

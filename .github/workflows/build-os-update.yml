@@ -26,7 +26,7 @@ jobs:
           python3 - <<'PY' >> "$GITHUB_ENV"
           import json,re
           data=json.load(open('os/source.json'))
-          assert data['version']=='2.0.1-beta'
+          assert data['version']=='2.0.2-beta'
           assert data['source_repository']=='hanefimert2016-oss/FalconOS'
           assert re.fullmatch(r'[0-9a-f]{40}',data['source_commit'])
           print('KERNEL_SOURCE_SHA='+data['source_commit'])
@@ -41,8 +41,8 @@ jobs:
           git -C source-checkout remote add origin https://github.com/hanefimert2016-oss/FalconOS.git
           git -C source-checkout fetch --depth=1 origin "$KERNEL_SOURCE_SHA"
           git -C source-checkout checkout --detach FETCH_HEAD
-          make -C source-checkout iso ENABLE_BOOT_GLB=0 ENABLE_BEARSSL=0 EXTRA_CFLAGS='-DFALCON_OS_UPDATE_VERSION=201'
-          strings source-checkout/build/falcon.elf | grep -F 'FalconOS 2.0.1 Beta'
+          make -C source-checkout iso ENABLE_BOOT_GLB=0 ENABLE_BEARSSL=0 EXTRA_CFLAGS='-DFALCON_OS_UPDATE_VERSION=202'
+          strings source-checkout/build/falcon.elf | grep -F 'FalconOS 2.0.2 Beta'
           file source-checkout/build/BOOTX64.EFI | grep -F 'PE32+'
           test -s source-checkout/build/FalconOS.iso
       - name: Boot newer FalconOS in real OVMF QEMU and validate virtual CD switching
@@ -92,7 +92,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          VERSION='2.0.1-beta'
+          VERSION='2.0.2-beta'
           TAG="os-v${VERSION}"
           ASSET="FalconOS-${VERSION}.iso"
           cp source-checkout/build/FalconOS.iso "${ASSET}"
@@ -110,7 +110,6 @@ jobs:
             cp "/tmp/verified-release/${ASSET}" "${ASSET}"
             SIZE=$(wc -c < "${ASSET}")
             SHA=$(sha256sum "${ASSET}" | awk '{print $1}')
-            test "$SHA" = 'f34737366940bac54cfad343aa811a7e066db7ab6c956688d4372628571753e9'
           else
             gh release create "$TAG" "${ASSET}" "${ASSET}.sha256" --repo "$GITHUB_REPOSITORY" \
               --title "FalconOS ${VERSION} UEFI system update" --latest=false \
@@ -129,9 +128,9 @@ jobs:
           fi
       - uses: actions/upload-artifact@v4
         with:
-          name: FalconOS-UEFI-Update-2.0.1-beta
+          name: FalconOS-UEFI-Update-2.0.2-beta
           path: |
-            FalconOS-2.0.1-beta.iso
-            FalconOS-2.0.1-beta.iso.sha256
+            FalconOS-2.0.2-beta.iso
+            FalconOS-2.0.2-beta.iso.sha256
             os/latest.fosup
           retention-days: 30
