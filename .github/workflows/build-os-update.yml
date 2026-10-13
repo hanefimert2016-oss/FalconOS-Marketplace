@@ -101,8 +101,16 @@ jobs:
           sha256sum "${ASSET}" > "${ASSET}.sha256"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Immutable update release already exists: $TAG"
+            mkdir -p /tmp/verified-release
             gh release download "$TAG" --repo "$GITHUB_REPOSITORY" -p "${ASSET}" -D /tmp/verified-release
-            test "$SHA" = "$(sha256sum "/tmp/verified-release/${ASSET}" | awk '{print $1}')"
+            # ISO9660 includes build timestamps: rebuilding the same pinned
+            # source need not yield byte-identical media. An existing release
+            # is immutable; use its ALREADY PUBLISHED verified ISO as source
+            # of truth, never silently replace a release on a new CI run.
+            cp "/tmp/verified-release/${ASSET}" "${ASSET}"
+            SIZE=$(wc -c < "${ASSET}")
+            SHA=$(sha256sum "${ASSET}" | awk '{print $1}')
+            test "$SHA" = 'f34737366940bac54cfad343aa811a7e066db7ab6c956688d4372628571753e9'
           else
             gh release create "$TAG" "${ASSET}" "${ASSET}.sha256" --repo "$GITHUB_REPOSITORY" \
               --title "FalconOS ${VERSION} UEFI system update" --latest=false \
