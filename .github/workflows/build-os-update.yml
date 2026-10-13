@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq nasm xorriso mtools clang lld binutils gcc python3
+          sudo apt-get install -y -qq nasm xorriso mtools clang lld binutils gcc python3 python3-pil
           mkdir source-checkout
           git -C source-checkout init -q
           git -C source-checkout remote add origin https://github.com/hanefimert2016-oss/FalconOS.git

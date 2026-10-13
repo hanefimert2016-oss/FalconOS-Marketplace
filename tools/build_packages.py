@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MAX_SIZE = 4096
 ID_RE = re.compile(r"[a-z][a-z0-9-]{1,31}\Z")
 VER_RE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[a-z0-9.-]+)?\Z")
-ALLOWED = {"echo", "date", "uname", "uptime", "whoami", "pwd", "ls", "help", "cal", "hwinfo", "free", "df", "clear", "doctor", "isostudio", "storagecenter", "themecreator", "codedium"}
+ALLOWED = {"echo", "date", "uname", "uptime", "whoami", "pwd", "ls", "help", "cal", "hwinfo", "free", "df", "clear", "doctor", "update", "isostudio", "storagecenter", "themecreator", "codedium"}
 
 def build_app(directory):
     data = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
