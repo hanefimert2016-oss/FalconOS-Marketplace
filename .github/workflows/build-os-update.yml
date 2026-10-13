@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq nasm xorriso mtools clang lld binutils gcc python3 python3-pil
+          sudo apt-get install -y -qq nasm xorriso mtools clang lld binutils gcc python3 python3-pil qemu-system-x86 ovmf
           mkdir source-checkout
           git -C source-checkout init -q
           git -C source-checkout remote add origin https://github.com/hanefimert2016-oss/FalconOS.git
@@ -45,6 +45,47 @@ jobs:
           strings source-checkout/build/falcon.elf | grep -F 'FalconOS 2.0.1 Beta'
           file source-checkout/build/BOOTX64.EFI | grep -F 'PE32+'
           test -s source-checkout/build/FalconOS.iso
+      - name: Boot newer FalconOS in real OVMF QEMU and validate virtual CD switching
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /usr/share/OVMF/OVMF_VARS_4M.fd /tmp/falcon-update-test-vars.fd
+          timeout 55s qemu-system-x86_64 -machine q35 -accel tcg -m 1024 -smp 1 \
+            -drive if=pflash,format=raw,unit=0,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.fd \
+            -drive if=pflash,format=raw,unit=1,file=/tmp/falcon-update-test-vars.fd \
+            -cdrom source-checkout/build/FalconOS.iso \
+            -display none -monitor none -serial none -no-reboot \
+            -debugcon file:/tmp/falcon-update-boot.log -global isa-debugcon.iobase=0xe9 || test "$?" -eq 124
+          grep -F 'FALCONBOOT/1 HANDOFF' /tmp/falcon-update-boot.log
+          python3 - <<'PY'
+          import importlib.util,pathlib,shutil,socket,subprocess,tempfile,time
+          p=pathlib.Path("source-checkout/tools/falcon_os_update_bridge.py")
+          spec=importlib.util.spec_from_file_location("up",p)
+          up=importlib.util.module_from_spec(spec);spec.loader.exec_module(up)
+          original=pathlib.Path("source-checkout/build/FalconOS.iso").resolve()
+          with tempfile.TemporaryDirectory() as td:
+              dst=pathlib.Path(td)/"verified-update.iso"
+              shutil.copyfile(original,dst)
+              monitor=pathlib.Path(td)/"monitor.sock"
+              proc=subprocess.Popen([
+                  "qemu-system-x86_64","-machine","q35","-accel","tcg",
+                  "-m","256","-display","none","-serial","none",
+                  "-drive",f"file={original},if=ide,index=2,media=cdrom,id=falcon_os_cd",
+                  "-monitor",f"unix:{monitor},server=on,wait=off","-no-reboot"
+              ],stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
+              try:
+                  for _ in range(130):
+                      if monitor.exists():break
+                      if proc.poll() is not None:raise RuntimeError(proc.stderr.read().decode())
+                      time.sleep(.1)
+                  else:raise TimeoutError("QEMU monitor unavailable")
+                  up.command_hmp(str(monitor),dst)
+                  print("PASS: actual QEMU CD-ROM updated to new verified ISO, original untouched")
+              finally:
+                  proc.terminate()
+                  try:proc.wait(timeout=8)
+                  except subprocess.TimeoutExpired:proc.kill()
+          PY
       - name: Publish immutable ISO and manifest
         shell: bash
         env:
@@ -74,6 +115,8 @@ jobs:
           git add os/latest.fosup
           if ! git diff --cached --quiet; then
             git commit -m "chore(updates): register verified ${VERSION} ISO digest [skip ci]"
+            git fetch origin updates
+            git rebase origin/updates
             git push origin HEAD:updates
           fi
       - uses: actions/upload-artifact@v4
